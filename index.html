@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pengimbas QR SKCC</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 18px;
+      background: #f1f5f9;
+      color: #12345a;
+    }
+    .card {
+      background: white;
+      padding: 18px;
+      border-radius: 14px;
+    }
+    button {
+      padding: 13px;
+      margin: 5px 0;
+      border: 0;
+      border-radius: 8px;
+      background: #1769aa;
+      color: white;
+      font-size: 16px;
+      width: 100%;
+    }
+    #reader { width: 100%; margin-top: 15px; }
+    #result {
+      margin-top: 15px;
+      padding: 12px;
+      background: #e0f2fe;
+      border-radius: 8px;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>KEHADIRAN SURAU SKCC</h2>
+    <p>Ujian kamera dan pengimbas QR murid.</p>
+
+    <button onclick="startScanner()">Buka Kamera</button>
+    <button onclick="stopScanner()">Hentikan Kamera</button>
+
+    <div id="reader"></div>
+    <div id="result">Status: Kamera belum dibuka.</div>
+  </div>
+
+  <script>
+    let scanner = null;
+    let started = false;
+    let lastCode = "";
+
+    async function startScanner() {
+      const result = document.getElementById("result");
+
+      if (started) {
+        result.textContent = "Kamera sudah dibuka.";
+        return;
+      }
+
+      try {
+        scanner = new Html5Qrcode("reader");
+
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (decodedText) => {
+            if (decodedText !== lastCode) {
+              lastCode = decodedText;
+              result.textContent = "QR berjaya dibaca. ID: " + decodedText;
+            }
+          },
+          () => {}
+        );
+
+        started = true;
+        result.textContent = "Kamera aktif. Halakan kepada kad QR.";
+      } catch (error) {
+        scanner = null;
+        result.textContent =
+          "Kamera gagal dibuka: " +
+          (error.message || String(error)) +
+          ". Semak kebenaran kamera dan cuba semula.";
+      }
+    }
+
+    async function stopScanner() {
+      if (scanner && started) {
+        try {
+          await scanner.stop();
+          scanner.clear();
+        } catch (error) {
+          console.log(error);
+        }
+      }
+
+      scanner = null;
+      started = false;
+      document.getElementById("result").textContent =
+        "Kamera dihentikan.";
+    }
+  </script>
+</body>
+</html>
